@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# LLM Deploy Console
 
-## Getting Started
+A lightweight, local-first deployment console for GPU inference services. It turns reviewed form parameters into reproducible Docker Compose and Kubernetes manifests, then optionally executes a tightly scoped deployment command.
 
-First, run the development server:
+The project is designed as an operations tool, not a model downloader disguised as a dashboard. Preview-only mode is the default. Real deployment requires an explicit second confirmation and an available Docker Engine or Kubernetes client.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Features
+
+- Read-only preflight checks for Docker, NVIDIA GPUs, and kubectl
+- Parameter presets for an 8 × A100 node, single-GPU validation, and Ollama POC
+- vLLM and Ollama configuration
+- GPU count, tensor parallelism, quantization, dtype, context, memory ratio, port, model source, and API key controls
+- Deterministic Docker Compose and Kubernetes YAML generation through a YAML serializer
+- Preview, copy, and download before execution
+- Local deployment records, status, lifecycle actions, and log viewing
+- Fixed command execution without passing form values through a shell
+- Runtime data and secrets excluded from Git
+
+## Safety model
+
+The console does not install drivers, Docker, Kubernetes, CUDA, or Python packages. Preflight runs only fixed version and inventory commands. Configuration generation does not pull images or models and does not use the GPU.
+
+Real deployment is disabled unless Docker is responsive or both kubectl and its target cluster are available. When enabled, the server invokes only these fixed command families:
+
+```text
+docker compose ... up|start|stop|restart|logs
+kubectl apply -f <generated-manifest>
+kubectl scale|rollout restart|logs deployment/<validated-name>
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+All form input is validated with Zod. YAML is generated from structured objects rather than shell strings. Deployment IDs are allowlisted before filesystem access. API keys are removed from the deployment metadata record; Docker secrets exist only in the ignored runtime `.env` file. Kubernetes deployments reference an existing Secret instead of serializing its value into YAML.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Run locally
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Requirements: Node.js 20.9 or newer.
 
-## Learn More
+```bash
+npm install
+npm run dev
+```
 
-To learn more about Next.js, take a look at the following resources:
+Open `http://localhost:3000`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Validate
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+```bash
+npm run lint
+npm run build
+npm audit
+```
 
-## Deploy on Vercel
+## Production notes
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+The included images and resource values are reviewable defaults, not universal production recommendations. Before running a real workload, pin image digests and validate the exact model, quantization backend, GPU topology, driver/runtime matrix, storage path, API authentication, context length, concurrency, and rollback plan.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+For Kubernetes, replace the sample CPU/memory values and node selector with cluster policy. When API authentication is enabled, create the referenced Secret with key `api-key` before applying the manifest; execution fails early when it is absent. Do not expose the inference port directly to an untrusted network.
+
+## Architecture
+
+```text
+Browser UI
+  -> validated API request
+  -> structured Compose/Kubernetes generator
+  -> preview and local deployment record
+  -> explicit confirmation
+  -> fixed Docker or kubectl command
+```
+
+Deployment records are written to `runtime/deployments/` and intentionally ignored by Git.
+
+## Scope
+
+This first version intentionally avoids user management, a database, remote SSH execution, background queues, model downloads, and cluster-wide administration. Those features should only be added with a real authentication, authorization, audit, and secret-management design.
