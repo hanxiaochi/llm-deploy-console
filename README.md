@@ -4,6 +4,8 @@
 
 项目重点不是在浏览器里包装几条 Shell 命令，而是展示一套小而完整的运维控制面：环境预检、参数约束、配置生成、执行确认、状态记录、生命周期操作和密钥边界。
 
+**English summary:** A guarded control plane for reviewing LLM deployment parameters and generating reproducible Docker Compose or Kubernetes configuration. It is designed for private AI infrastructure teams that need clear validation, approval, secret handling, and operational boundaries before workloads reach a GPU node or cluster.
+
 ![LLM Deploy Console dashboard](docs/assets/dashboard.png)
 
 > 截图来自本项目在普通 Windows 工作站上的真实运行状态。系统识别到 RTX 3070；Docker 和 kubectl 不可用时，执行按钮会保持锁定。截图没有运行模型、拉取镜像或占用 GPU。
@@ -16,6 +18,20 @@
 - Docker Compose 单机部署与 Kubernetes 集群部署
 - 国产 GPU 软件栈完成镜像适配后的部署模板扩展
 - 面向运维团队的标准化、审计化操作入口原型
+
+## 从控制台到本地算力机房落地
+
+本仓库展示的是部署控制面的可运行原型。真实企业项目还需要把机房、服务器、网络、存储、GPU 软件栈、调度平台、模型服务和持续运营连成一套可以验收的系统。
+
+配套的 [AI 算力机房与私有推理平台落地蓝图](docs/AI-INFRASTRUCTURE-DELIVERY.md) 给出了从需求澄清、IDC 准备度检查、硬件验收、软件栈适配、平台部署、模型服务、监控告警到交接运营的完整工作包。该文档是一份交付方法与验收框架，不把尚未执行的客户环境工作冒充为本仓库已经完成的实测结果。
+
+适合的合作方式包括：
+
+- 海外 AI 产品进入中国时的本地技术准备度评估
+- 单节点或小型 GPU 集群的部署验证与运行手册
+- 企业自建或托管 AI 机房的供应商协调、上线统筹与验收
+- 已有推理平台的稳定性、可观测性、容量和回滚审查
+- 中国客户、IDC、硬件厂商与海外研发团队之间的技术接口
 
 ## 功能概览
 
